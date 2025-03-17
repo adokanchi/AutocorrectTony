@@ -175,6 +175,7 @@ public class Autocorrect {
                 for (String word : result) {
                     if (word.equals(s)) {
                         inNewList = true;
+                        break;
                     }
                 }
             }
