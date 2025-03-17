@@ -3,6 +3,7 @@ import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Scanner;
 
 /**
  * Autocorrect
@@ -14,9 +15,10 @@ import java.util.Collections;
  */
 public class Autocorrect {
     private ArrayList<ArrayList<String>> dict;
+    private ArrayList<String> shortWords;
     private static int threshold;
     private static final int R = 28;
-    private static final int n = 4;
+    private static final int n = 2;
 
     /**
      * Constucts an instance of the Autocorrect class.
@@ -26,6 +28,7 @@ public class Autocorrect {
 
     public Autocorrect(String[] words, int threshold) {
         dict = new ArrayList<ArrayList<String>>();
+        shortWords = new ArrayList<String>();
         for (int i = 0; i < Math.pow(R, n); i++) {
             dict.add(new ArrayList<String>());
         }
@@ -33,6 +36,9 @@ public class Autocorrect {
             ArrayList<Integer> hashes = getHashes(word);
             for (int hash : hashes) {
                 dict.get(hash).add(word);
+            }
+            if (word.length() <= 5) {
+                shortWords.add(word);
             }
         }
         Autocorrect.threshold = threshold;
@@ -45,32 +51,38 @@ public class Autocorrect {
      * to threshold, sorted by edit distance, then sorted alphabetically.
      */
     public String[] runTest(String typed) {
-        // Generate candidates based on n-grams
+        Autocorrect.threshold = Math.max(1, typed.length() / 3);
         ArrayList<String> candidates = new ArrayList<String>();
-        ArrayList<Integer> hashes = getHashes(typed);
-        for (int hash : hashes) {
-            for (String candidate : dict.get(hash)) {
-                candidates.add(candidate);
-            }
+
+        if (typed.length() <= 3) {
+            candidates = shortWords;
         }
+        else {
+            // Generate candidates based on n-grams
+            ArrayList<Integer> hashes = getHashes(typed);
+            for (int hash : hashes) {
+                for (String candidate : dict.get(hash)) {
+                    candidates.add(candidate);
+                }
+            }
+
+            // Remove duplicates
+            candidates = removeDuplicates(candidates);
+        }
+
 
         // Evaluate candidates based on edit distance
         ArrayList<String> correctWords = new ArrayList<String>();
         for (String word : candidates) {
-            if (ed(word, typed) < threshold) {
+            if (ed(word, typed) <= threshold) {
                 correctWords.add(word);
             }
         }
 
-        // Remove duplicates
-        correctWords = removeDuplicates(correctWords);
-
         // Sort in alphabetical order
         Collections.sort(correctWords);
 
-        String[] correct = new String[correctWords.size()];
-        correctWords.toArray(correct);
-        return correct;
+        return correctWords.toArray(new String[0]);
     }
 
     /**
@@ -106,28 +118,27 @@ public class Autocorrect {
         // dp(i,j) = include i letters of s1 and j letters of s2
         int[][] dp = new int[n1 + 1][n2 + 1];
 
-        for (int i = 0; i <= n1; i++) {
-            for (int j = 0; j <= n2; j++) {
-                // Empty string case
-                if (i == 0 || j == 0) {
-                    dp[i][j] = Math.max(i, j);
-                }
+        // Empty string case
+        for (int i = 1; i <= n1; i++) {
+            dp[i][0] = i;
+        }
+        for (int j = 1; j <= n2; j++) {
+            dp[0][j] = j;
+        }
+
+        for (int i = 1; i <= n1; i++) {
+            for (int j = 1; j <= n2; j++) {
                 // Matching final character case
-                else if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
+                if (s1.charAt(i - 1) == s2.charAt(j - 1)) {
                     dp[i][j] = dp[i - 1][j - 1];
                 }
                 // General case
                 else {
-                    dp[i][j] = 1 + min(ed(tail(s1), tail(s2)), ed(s1, tail(s2)), ed(tail(s1), s2));
+                    dp[i][j] = 1 + min(dp[i - 1][j], dp[i][j - 1], dp[i - 1][j - 1]);
                 }
             }
         }
         return dp[n1][n2];
-    }
-
-    // Removes the final character, assuming s is not empty string
-    private static String tail(String s) {
-        return s.substring(0, s.length() - 1);
     }
 
     // Min of three integers
@@ -163,7 +174,7 @@ public class Autocorrect {
     }
 
     private static ArrayList<String> removeDuplicates(ArrayList<String> list) {
-        int p = 1_618_033_989;
+        int p = 999_991;
         int R = 256;
         ArrayList<String> result = new ArrayList<String>();
         boolean[] seen = new boolean[p];
@@ -196,5 +207,27 @@ public class Autocorrect {
             result %= p;
         }
         return result;
+    }
+
+    private int getShortWordsSize() {
+        return shortWords.size();
+    }
+
+    public static void main(String[] args) {
+        Autocorrect a = new Autocorrect(loadDictionary("large"), 2);
+        Scanner sc = new Scanner(System.in);
+
+        System.out.println(a.getShortWordsSize());
+        System.out.println("Enter word: ");
+        String input = sc.nextLine();
+        String[] corrections;
+        while (!input.equals("!")) {
+            corrections = a.runTest(input);
+            for (String word : corrections) {
+                System.out.println(word);
+            }
+            System.out.println("Enter word: ");
+            input = sc.nextLine();
+        }
     }
 }
