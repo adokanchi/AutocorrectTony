@@ -1,9 +1,9 @@
-Name: YOUR NAME HERE
+Name: Tony Dokanchi
 
-| Date    |  Time  |                                     Update |
-|:--------|:------:|-------------------------------------------:|
-| April 5 | 9-10pm | I tried to write abstract, efficient code. |
-|         |        |                                            |
+| Date     |  Time  |                                                                                                                                                                                                                                                                                                                                                                                                     Update |
+|:---------|:------:|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|
+| April 5  | 9-10pm |                                                                                                                                                                                                                                                                                                                                                                 I tried to write abstract, efficient code. |
+| March 16 | 6-8pm  | Locked in and coded almost all the functionality (aside from interfacing with the terminal). Fully coded the processes of processing the dictionary, taking the typed word and finding all candidates, then checking edit distances and comparing to a threshold to return. I haven't tested it yet, but it seems like it should work (maybe some bugfixing, but the approach and design should be solid). |
 
 
 To add a new row to the table, click into a cell and then hit shift-enter.
