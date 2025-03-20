@@ -16,8 +16,8 @@ import java.util.Scanner;
 public class Autocorrect {
     private ArrayList<ArrayList<String>> dict;
     private ArrayList<String> shortWords;
-    private static int threshold;
-    private static final int R = 28;
+    private int threshold;
+    private static final int R = 27;
     private static final int n = 2;
 
     /**
@@ -27,10 +27,10 @@ public class Autocorrect {
      */
 
     public Autocorrect(String[] words, int threshold) {
-        dict = new ArrayList<ArrayList<String>>();
-        shortWords = new ArrayList<String>();
+        dict = new ArrayList<>();
+        shortWords = new ArrayList<>();
         for (int i = 0; i < Math.pow(R, n); i++) {
-            dict.add(new ArrayList<String>());
+            dict.add(new ArrayList<>());
         }
         for (String word : words) {
             ArrayList<Integer> hashes = getHashes(word);
@@ -41,7 +41,7 @@ public class Autocorrect {
                 shortWords.add(word);
             }
         }
-        Autocorrect.threshold = threshold;
+        this.threshold = threshold;
     }
 
     /**
@@ -51,38 +51,48 @@ public class Autocorrect {
      * to threshold, sorted by edit distance, then sorted alphabetically.
      */
     public String[] runTest(String typed) {
-        Autocorrect.threshold = Math.max(1, typed.length() / 3);
-        ArrayList<String> candidates = new ArrayList<String>();
+        ArrayList<String> candidates = new ArrayList<>();
 
         if (typed.length() <= 3) {
             candidates = shortWords;
+            threshold = 1;
         }
         else {
             // Generate candidates based on n-grams
             ArrayList<Integer> hashes = getHashes(typed);
             for (int hash : hashes) {
-                for (String candidate : dict.get(hash)) {
-                    candidates.add(candidate);
-                }
+                candidates.addAll(dict.get(hash));
             }
 
             // Remove duplicates
             candidates = removeDuplicates(candidates);
         }
 
-
         // Evaluate candidates based on edit distance
-        ArrayList<String> correctWords = new ArrayList<String>();
+//        threshold = Math.max(1, typed.length() / 3);
+        ArrayList<ArrayList<String>> correctWords = new ArrayList<>();
+        for (int i = 0; i <= threshold; i++) {
+            correctWords.add(new ArrayList<>());
+        }
         for (String word : candidates) {
-            if (ed(word, typed) <= threshold) {
-                correctWords.add(word);
+            int ed = ed(word, typed);
+            if (ed <= threshold) {
+                correctWords.get(ed).add(word);
             }
         }
 
         // Sort in alphabetical order
-        Collections.sort(correctWords);
+        for (ArrayList<String> list : correctWords) {
+            Collections.sort(list);
+        }
 
-        return correctWords.toArray(new String[0]);
+        ArrayList<String> words = new ArrayList<>();
+
+        for (ArrayList<String> list : correctWords) {
+            words.addAll(list);
+        }
+
+        return words.toArray(new String[0]);
     }
 
     /**
@@ -148,9 +158,8 @@ public class Autocorrect {
 
     private static ArrayList<Integer> getHashes(String word) {
         int len = word.length();
-        if (len < n) return new ArrayList<Integer>();
-
-        ArrayList<Integer> hashes = new ArrayList<Integer>();
+        ArrayList<Integer> hashes = new ArrayList<>();
+        int modulus = (int) Math.pow(R, n);
         int hash = 0;
         for (int i = 0; i < n - 1; i++) {
             hash *= R;
@@ -160,7 +169,7 @@ public class Autocorrect {
             // i is the index of the last letter (the letter being added)
             hash *= R;
             hash += getVal(word.charAt(i));
-            hash %= Math.pow(R, n);
+            hash %= modulus;
 
             hashes.add(hash);
         }
@@ -168,20 +177,19 @@ public class Autocorrect {
     }
 
     private static int getVal(char c) {
-        if (c == '-') return 26;
-        if (c == '\'') return 27;
+        if (c == '\'') return 26;
         return c - 'a';
     }
 
     private static ArrayList<String> removeDuplicates(ArrayList<String> list) {
         int p = 999_991;
         int R = 256;
-        ArrayList<String> result = new ArrayList<String>();
+        ArrayList<String> result = new ArrayList<>();
         boolean[] seen = new boolean[p];
         for (String s : list) {
             boolean inNewList = false;
             // If the hash matches a previously seen hash
-            if (seen[hash(s, R, p)]) {
+            if (seen[hash(s)]) {
                 // Check if the string matches a previous string
                 for (String word : result) {
                     if (word.equals(s)) {
@@ -192,13 +200,16 @@ public class Autocorrect {
             }
             if (!inNewList) {
                 result.add(s);
-                seen[hash(s, R, p)] = true;
+                seen[hash(s)] = true;
             }
         }
         return result;
     }
 
-    private static int hash(String s, int R, int p) {
+    // Uses a polynomial rolling hash function with radix R and size p to hash the string s
+    private static int hash(String s) {
+        int p = 999_991;
+        int R = 256;
         int result = 0;
         for (int i = 0; i < s.length(); i++) {
             result *= R;
@@ -209,15 +220,10 @@ public class Autocorrect {
         return result;
     }
 
-    private int getShortWordsSize() {
-        return shortWords.size();
-    }
-
     public static void main(String[] args) {
         Autocorrect a = new Autocorrect(loadDictionary("large"), 2);
         Scanner sc = new Scanner(System.in);
 
-        System.out.println(a.getShortWordsSize());
         System.out.println("Enter word: ");
         String input = sc.nextLine();
         String[] corrections;
