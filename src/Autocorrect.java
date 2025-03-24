@@ -2,7 +2,6 @@ import java.io.BufferedReader;
 import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.Scanner;
 
 /**
@@ -42,7 +41,7 @@ public class Autocorrect {
             for (int hash : hashes) {
                 dict.get(hash).add(word);
             }
-            if (word.length() <= 5) {
+            if (word.length() <= 3) {
                 shortWords.add(word);
             }
         }
