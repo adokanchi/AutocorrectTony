@@ -20,7 +20,7 @@ public class Autocorrect {
     private boolean isMatch;
     private static final int R = 27;
     // Set n=1 for test cases
-    private static final int n = 2;
+    private static final int n = 4;
     private static final int RtoN = (int) Math.pow(R, n);
 
     /**
@@ -169,6 +169,7 @@ public class Autocorrect {
 
     // Returns a list of all hashes of the n-grams in word
     private static ArrayList<Integer> getHashes(String word) {
+        if (word.length() < n) return new ArrayList<Integer>();
         ArrayList<Integer> hashes = new ArrayList<>();
         int hash = 0;
         // Set up sliding window
