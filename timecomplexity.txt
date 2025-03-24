@@ -1,0 +1,18 @@
+Constructor (initializing dict): O(nl)
+For each word, we have to compute the hashes of its n-grams, so it's O(nl) where n is the number of words in the
+dictionary and l is the average word length.
+
+
+runTest(): O(nlL^2) (i think?)
+Generating n-grams of the typed word is O(L) where L is the typed word's length.
+
+Looking up and adding candidates is O(1) per n-gram, so O(L) overall. Now, the number of candidates should be
+proportional to the number of words in the dictionary times the number of n-grams in the typed word (nL).
+
+Removing duplicates is O(l) per candidate, so O(nlL) overall.
+
+Computing the edit distances is O(lL) per candidate, so O(lL*nL)=O(nlL^2).
+
+Combining into one ArrayList and returning as an array is O(t) where t is the threshold.
+
+run(): Same as runTest()

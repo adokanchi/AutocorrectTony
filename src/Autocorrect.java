@@ -19,8 +19,8 @@ public class Autocorrect {
     private int threshold;
     private boolean isMatch;
     private static final int R = 27;
-    // Set n=1 for test cases
-    private static final int n = 4;
+    // Set n=1 to pass test cases
+    private static final int n = 3;
     private static final int RtoN = (int) Math.pow(R, n);
 
     /**
@@ -58,6 +58,15 @@ public class Autocorrect {
     public String[] runTest(String typed) {
         ArrayList<String> candidates = new ArrayList<>();
 
+        if (typed.length() < 9) {
+            threshold = 2;
+        }
+        else if (typed.length() < 13) {
+            threshold = 3;
+        }
+        else {
+            threshold = 4;
+        }
         // If the typed word is very short, use all short-enough words as candidates and use a threshold of 1.
         if (typed.length() <= 3) {
             candidates = shortWords;
@@ -80,8 +89,16 @@ public class Autocorrect {
         for (int i = 0; i <= threshold; i++) {
             correctWords.add(new ArrayList<>());
         }
+
         for (String word : candidates) {
-            int ed = ed(word, typed);
+            int ed;
+            if (typed.length() <= 3) {
+                ed = edShort(word, typed);
+            }
+            else {
+                ed = ed(word, typed);
+            }
+
             if (ed == 0) {
                 isMatch = true;
                 return new String[0];
@@ -162,6 +179,21 @@ public class Autocorrect {
         return dp[n1][n2];
     }
 
+    // edShort only allows substitutions, not additions/removals
+    private static int edShort(String s1, String s2) {
+        int n1 = s1.length();
+        int n2 = s2.length();
+        if (n1 != n2) return 314159265;
+
+        int ed = 0;
+        for (int i = 0; i < n1; i++) {
+            if (s1.charAt(i) != s2.charAt(i)) {
+                ed++;
+            }
+        }
+        return ed;
+    }
+
     // Min of three integers
     private static int min(int a, int b, int c) {
         return Math.min(a, Math.min(b, c));
@@ -238,7 +270,7 @@ public class Autocorrect {
     private void run() {
         Scanner sc = new Scanner(System.in);
 
-        System.out.print("Enter a word: ");
+        System.out.print("Enter a word (! to exit): ");
         String input = sc.nextLine();
         String[] corrections;
         while (!input.equals("!")) {
@@ -254,9 +286,9 @@ public class Autocorrect {
                 else {
                     System.out.println("Did you mean...");
                 }
-
-                for (String word : corrections) {
-                    System.out.println(word);
+                // Print out up to 8 suggestions.
+                for (int i = 0; i < Math.min(corrections.length, 8); i++) {
+                    System.out.println(corrections[i]);
                 }
             }
             System.out.println("~~~~~~~~");
